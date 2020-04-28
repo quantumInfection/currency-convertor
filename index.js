@@ -55,27 +55,48 @@ async function getCurrencyRates(base, quote, date) {
  */
 async function processTransaction(transaction, base) {
     // Hardcoding the date for now, because it depends on the use case. We could also use date of the transaction.
-    var date = '2020-04-26'
+    const date = '2020-04-26'
     const converstionRate = await getCurrencyRates(base, transaction["currency"], date);
     return {
         "createdAt": transaction["createdAt"], // Not sure about this date, it can be current timestamp because it's being converted right now
         "currency": base,
-        "convertedAmount": transaction["amount"] * converstionRate,
+        "convertedAmount": (transaction["amount"] * converstionRate).toFixed(4),
         "checksum": transaction["checksum"]
     }
 }
 
-app.get('/get-transactions', async function(_req, resp) {
+/**
+ * This function does the following tasks
+ * 1) Get N transactions from transaction endpoint.
+ * 2) Process each transaction and compute amount according against base currency
+ * 3) Make a list of all processed transacations
+ */
+async function getProcessedTransactions(n) {
     var transactions = []
     // n: number of transactions to get and process
-    var i = 0, n = 10;
+    var i = 0;
     for (; i < n; i++) {
         const transaction = await getSingleTransaction();
         const processedTransaction = await processTransaction(transaction, "EUR");
-        console.log("PT: ", processTransaction);
-        transactions.push(processTransaction);
+        transactions.push(processedTransaction);
     }
-    console.log(transactions);
+    return transactions;
+}
+
+app.get('/process-transactions', async function(req, resp) {
+    // Get 10 transactions to process
+    const processedTransactions = await getProcessedTransactions(2);
+    const url = "https://7np770qqk5.execute-api.eu-west-1.amazonaws.com/prod/process-transactions";
+    let data, err;
+
+    [err, data] = await to(axios.post(url, {"transactions": processedTransactions}));
+    if (err) {
+        console.error("ERROR: ", err);
+        return;
+    }
+
+    console.log("Response: ", data.data);
+    resp.status(200).send(data.data);
     return;
 });
 
