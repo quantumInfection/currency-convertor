@@ -38,6 +38,7 @@ async function getSingleTransaction() {
  */
 async function getCurrencyRates(base, quote, date) {
     const url = `https://api.exchangeratesapi.io/${date}?base=${base}`
+    let data, err;
     [err, data] = await to(axios.get(url));
     if (err) {
         console.error("ERROR: ", err);
@@ -71,6 +72,7 @@ app.get('/get-transactions', async function(_req, resp) {
     for (; i < n; i++) {
         const transaction = await getSingleTransaction();
         const processedTransaction = await processTransaction(transaction, "EUR");
+        console.log("PT: ", processTransaction);
         transactions.push(processTransaction);
     }
     console.log(transactions);
