@@ -1,0 +1,14 @@
+{
+  "name": "zlick-home-assignment",
+  "version": "1.0.0",
+  "description": "Converts currency into EUR",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Abdullah",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.19.2"
+  }
+}

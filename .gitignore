@@ -1,0 +1,3 @@
+scripts/deploy_local.sh
+private/
+node_modules
