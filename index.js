@@ -7,6 +7,10 @@ const express = require('express');
 const app = express();
 const port = 3000;
 
+/**
+ * Helper function to beautify async calls with promises.
+ * @param {Promise to be resolved} promise 
+ */
 function to(promise) {
     return promise.then(data => {
         return [null, data];
