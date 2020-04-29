@@ -120,4 +120,4 @@ app.get('/process-transactions', async function(req, resp) {
 
 app.listen(port, () => console.log(`Listening @ port ${port}`));
 
-export {getSingleTransaction, getCurrencyRates};
+export {getSingleTransaction, getCurrencyRates, processTransaction};
