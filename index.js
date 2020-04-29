@@ -1,6 +1,7 @@
 /** Entry point for node app **/
 
 import axios from 'axios';
+import moment from 'moment';
 const express = require('express');
 
 // Init App
@@ -58,13 +59,13 @@ async function getCurrencyRates(base, quote, date) {
  * @param {Base currency of transaction} base
  */
 async function processTransaction(transaction, base) {
-    // Hardcoding the date for now, because it depends on the use case. We could also use date of the transaction.
-    const date = '2020-04-26'
+    // Use deep copy of createdAt date.
+    const date = moment(transaction["createdAt"]).format("YYYY-MM-DD");
     const converstionRate = await getCurrencyRates(base, transaction["currency"], date);
     return {
         "createdAt": transaction["createdAt"], // Not sure about this date, it can be current timestamp because it's being converted right now
-        "currency": base,
-        "convertedAmount": (transaction["amount"] * converstionRate).toFixed(4),
+        "currency": transaction["currency"],
+        "convertedAmount": parseFloat((transaction["amount"] / converstionRate).toFixed(4)),
         "checksum": transaction["checksum"]
     }
 }
@@ -89,7 +90,7 @@ async function getProcessedTransactions(n) {
 
 app.get('/process-transactions', async function(req, resp) {
     // Get 10 transactions to process
-    const processedTransactions = await getProcessedTransactions(2);
+    const processedTransactions = await getProcessedTransactions(10);
     const url = "https://7np770qqk5.execute-api.eu-west-1.amazonaws.com/prod/process-transactions";
     let data, err;
 
