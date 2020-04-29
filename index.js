@@ -35,7 +35,7 @@ async function getSingleTransaction() {
 
 
 /**
- * Get Rate of current against base and quote currency at a specific date using 'https://api.exchangeratesapi.io'
+ * Get Rate of currency against base and quote currency at a specific date using 'https://api.exchangeratesapi.io'
  * @param {Base currency} base 
  * @param {Quote currency} quote 
  * @param {Instance of date for conversion} date 
