@@ -102,7 +102,7 @@ async function getProcessedTransactions(n) {
 app.get('/process-transactions', async function(req, resp) {
     // Get 10 transactions to process
     console.time("process");
-    const processedTransactions = await getProcessedTransactions(10);
+    const processedTransactions = await getProcessedTransactions(100);
     const url = "https://7np770qqk5.execute-api.eu-west-1.amazonaws.com/prod/process-transactions";
     let data, err;
 
