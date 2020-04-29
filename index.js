@@ -1,7 +1,7 @@
 /** Entry point for node app **/
 
 import axios from 'axios';
-import moment from 'moment';
+import moment from 'moment-timezone';
 const express = require('express');
 
 // Init App
@@ -63,7 +63,7 @@ async function getCurrencyRates(base, quote, date) {
 async function processTransaction(transaction, base, i) {
     console.log(`processTransaction: ${i}`);
     // Use deep copy of createdAt date.
-    const date = moment(transaction["createdAt"]).format("YYYY-MM-DD");
+    const date = moment(transaction["createdAt"]).tz("UTC").format("YYYY-MM-DD");
 
     let converstionRate, err;
     [err, converstionRate] = await to(getCurrencyRates(base, transaction["currency"], date));
