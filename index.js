@@ -23,7 +23,8 @@ function to(promise) {
 /**
  * Call transactions endpoint and return transactions data
  */
-async function getSingleTransaction() {
+async function getSingleTransaction(i) {
+    console.log(`getSingleTransaction: ${i}`);
     const url = "https://7np770qqk5.execute-api.eu-west-1.amazonaws.com/prod/get-transaction";
     let data, err;
     [err, data] = await to(axios.get(url));
@@ -42,6 +43,7 @@ async function getSingleTransaction() {
  * @param {Instance of date for conversion} date 
  */
 async function getCurrencyRates(base, quote, date) {
+    console.log("getCurrencyRates");
     const url = `https://api.exchangeratesapi.io/${date}?base=${base}`
     let data, err;
     [err, data] = await to(axios.get(url));
@@ -59,6 +61,7 @@ async function getCurrencyRates(base, quote, date) {
  * @param {Base currency of transaction} base
  */
 async function processTransaction(transaction, base) {
+    console.log("processTransaction");
     // Use deep copy of createdAt date.
     const date = moment(transaction["createdAt"]).format("YYYY-MM-DD");
     const converstionRate = await getCurrencyRates(base, transaction["currency"], date);
@@ -81,7 +84,7 @@ async function getProcessedTransactions(n) {
     // n: number of transactions to get and process
     var i = 0;
     for (; i < n; i++) {
-        const transaction = await getSingleTransaction();
+        const transaction = await getSingleTransaction(i);
         const processedTransaction = await processTransaction(transaction, "EUR");
         transactions.push(processedTransaction);
     }
@@ -90,6 +93,7 @@ async function getProcessedTransactions(n) {
 
 app.get('/process-transactions', async function(req, resp) {
     // Get 10 transactions to process
+    console.time("process");
     const processedTransactions = await getProcessedTransactions(10);
     const url = "https://7np770qqk5.execute-api.eu-west-1.amazonaws.com/prod/process-transactions";
     let data, err;
@@ -99,6 +103,7 @@ app.get('/process-transactions', async function(req, resp) {
         console.error("ERROR: ", err);
         return;
     }
+    console.timeEnd("process");
 
     console.log("Response: ", data.data);
     resp.status(200).send(data.data);
@@ -106,3 +111,6 @@ app.get('/process-transactions', async function(req, resp) {
 });
 
 app.listen(port, () => console.log(`Listening @ port ${port}`));
+
+// Exposed for testing
+export {getSingleTransaction, getCurrencyRates, processTransaction};
