@@ -43,7 +43,6 @@ async function getSingleTransaction(i) {
  * @param {Instance of date for conversion} date 
  */
 async function getCurrencyRates(base, quote, date) {
-    console.log("getCurrencyRates");
     const url = `https://api.exchangeratesapi.io/${date}?base=${base}`
     let data, err;
     [err, data] = await to(axios.get(url));
@@ -59,9 +58,10 @@ async function getCurrencyRates(base, quote, date) {
  * Process a single transaction and make it ready for the next endpoint
  * @param {Single transaction from the transactions url} transaction 
  * @param {Base currency of transaction} base
+ * @param {For logging purposes} i
  */
-async function processTransaction(transaction, base) {
-    console.log("processTransaction");
+async function processTransaction(transaction, base, i) {
+    console.log(`processTransaction: ${i}`);
     // Use deep copy of createdAt date.
     const date = moment(transaction["createdAt"]).format("YYYY-MM-DD");
     const converstionRate = await getCurrencyRates(base, transaction["currency"], date);
@@ -74,21 +74,29 @@ async function processTransaction(transaction, base) {
 }
 
 /**
+ * Get a single transaction and processes it
+ * @param {For logging purposes} i 
+ */
+async function getSingleProcessedTransaction(i) {
+    const transaction = await getSingleTransaction(i);
+    return await processTransaction(transaction, "EUR", i);
+}
+
+/**
  * This function does the following tasks
  * 1) Get N transactions from transaction endpoint.
  * 2) Process each transaction and compute amount according against base currency
  * 3) Make a list of all processed transacations
  */
 async function getProcessedTransactions(n) {
-    var transactions = []
     // n: number of transactions to get and process
     var i = 0;
+    const promises = []
     for (; i < n; i++) {
-        const transaction = await getSingleTransaction(i);
-        const processedTransaction = await processTransaction(transaction, "EUR");
-        transactions.push(processedTransaction);
+        promises.push(getSingleProcessedTransaction(i));
     }
-    return transactions;
+
+    return await Promise.all(promises);;
 }
 
 app.get('/process-transactions', async function(req, resp) {
@@ -111,6 +119,3 @@ app.get('/process-transactions', async function(req, resp) {
 });
 
 app.listen(port, () => console.log(`Listening @ port ${port}`));
-
-// Exposed for testing
-export {getSingleTransaction, getCurrencyRates, processTransaction};
