@@ -29,10 +29,10 @@ async function getSingleTransaction(i) {
     let data, err;
     [err, data] = await to(axios.get(url));
     if (err) {
-        console.error("ERROR: ", err);
-        return;
+        console.error("getSingleTransaction: ", err);
+        return Promise.reject(err);;
     }
-    return data.data;
+    return Promise.resolve(data.data);
 };
 
 
@@ -47,11 +47,11 @@ async function getCurrencyRates(base, quote, date) {
     let data, err;
     [err, data] = await to(axios.get(url));
     if (err) {
-        console.error("ERROR: ", err);
-        return;
+        console.error("getCurrencyRates: ", err);
+        return Promise.reject(err);
     }
 
-    return data.data["rates"][quote];
+    return Promise.resolve(data.data["rates"][quote]);
 }
 
 /**
@@ -64,13 +64,21 @@ async function processTransaction(transaction, base, i) {
     console.log(`processTransaction: ${i}`);
     // Use deep copy of createdAt date.
     const date = moment(transaction["createdAt"]).format("YYYY-MM-DD");
-    const converstionRate = await getCurrencyRates(base, transaction["currency"], date);
-    return {
+
+    let converstionRate, err;
+    [err, converstionRate] = await to(getCurrencyRates(base, transaction["currency"], date));
+
+    if (err) {
+        console.error("processTransaction: ", err);
+        return Promise.reject(err);
+    }
+
+    return Promise.resolve({
         "createdAt": transaction["createdAt"], // Not sure about this date, it can be current timestamp because it's being converted right now
         "currency": transaction["currency"],
         "convertedAmount": parseFloat((transaction["amount"] / converstionRate).toFixed(4)),
         "checksum": transaction["checksum"]
-    }
+    });
 }
 
 /**
@@ -78,8 +86,21 @@ async function processTransaction(transaction, base, i) {
  * @param {For logging purposes} i 
  */
 async function getSingleProcessedTransaction(i) {
-    const transaction = await getSingleTransaction(i);
-    return await processTransaction(transaction, "EUR", i);
+    let transaction, err, processedTransaction;
+    [err, transaction] = await to(getSingleTransaction(i));
+
+    if (err) {
+        console.error("getSingleProcessedTransaction:", err);
+        return Promise.reject(err);;
+    }
+
+    [err, processedTransaction] = await to(processTransaction(transaction, "EUR", i));
+
+    if (err) {
+        console.error("getSingleProcessedTransaction:", err);
+        return Promise.reject(err);;
+    }
+    return Promise.resolve(processedTransaction);
 }
 
 /**
